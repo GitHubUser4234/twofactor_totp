@@ -15,12 +15,10 @@
 		+ '<span class="icon-loading-small totp-loading"></span>'
 		+ '<span>' + t('twofactor_totp', 'Enable TOTP') + '</span>'
 		+ '{{else}}'
-		+ '<div>'
-		+ '    <input type="checkbox" class="checkbox" id="totp-enabled" {{#if enabled}}checked{{/if}}>'
-		+ '    <label for="totp-enabled">' + t('twofactor_totp', 'Enable TOTP') + '</label>'
-		+ '</div>'
-		+ '{{/if}}'
 		+ '{{#if secret}}'
+		+ '<div>'
+		+ t('twofactor_totp', 'TOTP regenerated.')
+		+ '</div>'
 		+ '<div>'
 		+ '    <span>' + t('twofactor_totp', 'This is your new TOTP secret:') + ' {{secret}}</span>'
 		+ '</div>'
@@ -28,9 +26,12 @@
 		+ '    <span>' + t('twofactor_totp', 'Scan this QR code with your TOTP app') + '<span><br>'
 		+ '    <img src="{{qr}}">'
 		+ '</div>'
-		+ '<span>' + t('twofactor_totp', 'Once you have configured your app, enter a test code below to ensure that your app has been configured correctly.') + '<span><br>'
-		+ '<input id="totp-confirmation" type="tel" minlength="6" maxlength="6" autocomplete="off" autocapitalize="off" placeholder="' + t('twofactor_totp', 'Authentication code') + '">'
-		+ '<input id="totp-confirmation-submit" type="button" value="' + t('twofactor_totp', 'Verify') + '">'
+		+ '{{else}}'
+		+ '<div>'
+		+ t('twofactor_totp', 'TOTP {{#unless enabled}}not {{/unless}}enabled. ')
+		+ '<input id="totp-confirmation-submit" type="button" value="' + t('twofactor_totp', '{{#if enabled}}Regenerate{{else}}Generate{{/if}} TOTP') + '">'
+		+ '</div>'
+		+ '{{/if}}'
 		+ '{{/if}}';
 
 	var View = Backbone.View.extend({
@@ -52,7 +53,7 @@
 
 		events: {
 			'change #totp-enabled': '_onToggleEnabled',
-			'click #totp-confirmation-submit': '_enableTOTP',
+			'click #totp-confirmation-submit': '_createTOTP',
 			'keydown #totp-confirmation': '_onConfirmKeyDown'
 		},
 
@@ -107,8 +108,6 @@
 
 			if (!!enabled) {
 				return this._createTOTP();
-			} else {
-				return this._disableTOTP();
 			}
 		},
 
@@ -124,11 +123,11 @@
 			this.render();
 
 			return this._updateServerState({
-				state: STATE_CREATED
+				state: STATE_ENABLED
 			}).then(function () {
 				// If the stat could be changed, keep showing the loading
 				// spinner until the user has finished the registration
-				this._loading = this._state === STATE_CREATED;
+				this._loading = false;
 				this.render();
 			}.bind(this), function() {
 				// Restore on error
@@ -177,22 +176,6 @@
 				} else {
 					OC.Notification.showTemporary(t('twofactor_totp', 'Could not verify your key. Please try again'));
 				}
-				this.render();
-			}.bind(this), console.error.bind(this));
-		},
-
-		/**
-		 * @returns {Promise}
-		 */
-		_disableTOTP: function () {
-			this._loading = true;
-			// Show loading spinner
-			this.render();
-
-			return this._updateServerState({
-				state: STATE_DISABLED
-			}).then(function () {
-				this._loading = false;
 				this.render();
 			}.bind(this), console.error.bind(this));
 		},

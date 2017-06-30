@@ -77,7 +77,7 @@ class Totp implements ITotp {
 		$dbSecret = new TotpSecret();
 		$dbSecret->setUserId($user->getUID());
 		$dbSecret->setSecret($this->crypto->encrypt($secret));
-		$dbSecret->setState(ITotp::STATE_CREATED);
+		$dbSecret->setState(ITotp::STATE_ENABLED);
 
 		$this->secretMapper->insert($dbSecret);
 		return $secret;
