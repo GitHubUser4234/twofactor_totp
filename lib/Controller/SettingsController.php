@@ -81,7 +81,7 @@ class SettingsController extends Controller {
 				return [
 					'state' => ITotp::STATE_DISABLED,
 				];
-			case ITotp::STATE_CREATED:
+			case ITotp::STATE_ENABLED:
 				$secret = $this->totp->createSecret($user);
 
 				$qrCode = new QrCode();
@@ -91,15 +91,15 @@ class SettingsController extends Controller {
 					->setSize(150)
 					->getDataUri();
 				return [
-					'state' => ITotp::STATE_CREATED,
+					'state' => ITotp::STATE_ENABLED,
 					'secret' => $secret,
 					'qr' => $qr,
 				];
-			case ITotp::STATE_ENABLED:
+			/*case ITotp::STATE_ENABLED:
 				$success = $this->totp->enable($user, $key);
 				return [
 					'state' => $success ? ITotp::STATE_ENABLED : ITotp::STATE_CREATED,
-				];
+				];*/
 			default:
 				throw new InvalidArgumentException('Invalid TOTP state');
 		}
